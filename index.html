@@ -1,0 +1,1475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Validex Engineering — Validation, Quality & Engineering Design</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ── RESET & VARIABLES ─────────────────────────────────── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #0a0f1e;
+    --navy2:  #0f1629;
+    --navy3:  #141d35;
+    --steel:  #1e2d4f;
+    --gold:   #c9a84c;
+    --gold2:  #e8c97a;
+    --silver: #8fa0bc;
+    --light:  #d4dce8;
+    --white:  #f0f4fa;
+    --red:    #c94c4c;
+
+    --font-display: 'Cormorant Garamond', serif;
+    --font-body:    'DM Sans', sans-serif;
+    --font-mono:    'DM Mono', monospace;
+
+    --transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--light);
+    font-family: var(--font-body);
+    font-weight: 300;
+    font-size: 16px;
+    line-height: 1.7;
+    overflow-x: hidden;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ─────────────────────────────── */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.035'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 9999; opacity: 0.4;
+  }
+
+  /* ── SCROLLBAR ─────────────────────────────────────────── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--navy2); }
+  ::-webkit-scrollbar-thumb { background: var(--gold); border-radius: 2px; }
+
+  /* ── UTILITY ───────────────────────────────────────────── */
+  .container { max-width: 1200px; margin: 0 auto; padding: 0 2rem; }
+  .gold { color: var(--gold); }
+  .tag {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: inline-block;
+  }
+  .divider {
+    width: 60px; height: 1px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+    margin: 1.5rem 0;
+  }
+
+  /* ── NAVIGATION ────────────────────────────────────────── */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    padding: 1.4rem 0;
+    transition: var(--transition);
+  }
+  nav.scrolled {
+    background: rgba(10, 15, 30, 0.95);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid rgba(201, 168, 76, 0.15);
+    padding: 1rem 0;
+  }
+  nav .inner {
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .nav-logo {
+    display: flex; align-items: baseline; gap: 0.5rem;
+    text-decoration: none;
+  }
+  .nav-logo-mark {
+    font-family: var(--font-display);
+    font-size: 1.6rem;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.01em;
+  }
+  .nav-logo-mark span { color: var(--gold); }
+  .nav-logo-sub {
+    font-family: var(--font-mono);
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--silver);
+  }
+  .nav-links {
+    display: flex; gap: 2.5rem; list-style: none; align-items: center;
+  }
+  .nav-links a {
+    text-decoration: none;
+    color: var(--silver);
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    transition: color var(--transition);
+    position: relative;
+  }
+  .nav-links a::after {
+    content: ''; position: absolute;
+    bottom: -4px; left: 0; right: 100%;
+    height: 1px; background: var(--gold);
+    transition: right var(--transition);
+  }
+  .nav-links a:hover { color: var(--white); }
+  .nav-links a:hover::after { right: 0; }
+  .nav-cta {
+    background: transparent;
+    border: 1px solid var(--gold);
+    color: var(--gold) !important;
+    padding: 0.5rem 1.2rem;
+    border-radius: 2px;
+    transition: all var(--transition) !important;
+  }
+  .nav-cta:hover {
+    background: var(--gold) !important;
+    color: var(--navy) !important;
+  }
+  .nav-cta::after { display: none !important; }
+  .nav-hamburger { display: none; cursor: pointer; flex-direction: column; gap: 5px; }
+  .nav-hamburger span {
+    display: block; width: 24px; height: 1.5px;
+    background: var(--silver); transition: var(--transition);
+  }
+
+  /* ── HERO ──────────────────────────────────────────────── */
+  #hero {
+    min-height: 100vh;
+    display: flex; align-items: center;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 60% at 70% 50%, rgba(30, 45, 79, 0.6) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 50% at 20% 80%, rgba(201, 168, 76, 0.06) 0%, transparent 60%),
+      linear-gradient(160deg, var(--navy) 0%, var(--navy2) 50%, var(--navy3) 100%);
+  }
+  .hero-grid {
+    position: absolute; inset: 0; opacity: 0.04;
+    background-image:
+      linear-gradient(rgba(201,168,76,0.8) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(201,168,76,0.8) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+  .hero-circuit {
+    position: absolute; right: 0; top: 0; bottom: 0; width: 55%;
+    opacity: 0.05;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='600' height='800' viewBox='0 0 600 800'%3E%3Cg fill='none' stroke='%23c9a84c' stroke-width='1'%3E%3Cpath d='M100 100 L200 100 L200 200 L400 200 L400 300'/%3E%3Cpath d='M500 150 L500 250 L350 250 L350 400 L450 400'/%3E%3Cpath d='M50 400 L150 400 L150 500 L300 500 L300 600 L500 600'/%3E%3Cpath d='M200 50 L200 150 L100 150 L100 350 L250 350'/%3E%3Ccircle cx='200' cy='100' r='4' fill='%23c9a84c'/%3E%3Ccircle cx='400' cy='300' r='4' fill='%23c9a84c'/%3E%3Ccircle cx='350' cy='400' r='4' fill='%23c9a84c'/%3E%3Ccircle cx='300' cy='500' r='4' fill='%23c9a84c'/%3E%3Ccircle cx='150' cy='400' r='4' fill='%23c9a84c'/%3E%3C/g%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+  .hero-content {
+    position: relative; z-index: 2;
+    max-width: 780px;
+  }
+  .hero-tag { margin-bottom: 1.5rem; }
+  .hero-tag .tag { opacity: 0; animation: fadeUp 0.8s 0.2s forwards; }
+  .hero-headline {
+    font-family: var(--font-display);
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 300;
+    line-height: 1.08;
+    letter-spacing: -0.02em;
+    color: var(--white);
+    opacity: 0; animation: fadeUp 0.9s 0.4s forwards;
+    margin-bottom: 1.5rem;
+  }
+  .hero-headline em {
+    font-style: italic; color: var(--gold);
+  }
+  .hero-sub {
+    font-size: 1.05rem;
+    color: var(--silver);
+    max-width: 560px;
+    line-height: 1.8;
+    opacity: 0; animation: fadeUp 0.9s 0.6s forwards;
+    margin-bottom: 2.5rem;
+  }
+  .hero-actions {
+    display: flex; gap: 1rem; flex-wrap: wrap;
+    opacity: 0; animation: fadeUp 0.9s 0.8s forwards;
+  }
+  .btn-primary {
+    background: var(--gold);
+    color: var(--navy);
+    padding: 0.85rem 2rem;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: none; cursor: pointer;
+    border-radius: 2px;
+    transition: all var(--transition);
+    display: inline-block;
+  }
+  .btn-primary:hover { background: var(--gold2); transform: translateY(-2px); }
+  .btn-outline {
+    background: transparent;
+    color: var(--light);
+    padding: 0.85rem 2rem;
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 400;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border: 1px solid rgba(143, 160, 188, 0.35);
+    border-radius: 2px;
+    transition: all var(--transition);
+    display: inline-block;
+  }
+  .btn-outline:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    transform: translateY(-2px);
+  }
+  .hero-flags {
+    position: absolute; bottom: 2.5rem; right: 0;
+    display: flex; gap: 1rem; z-index: 2;
+    opacity: 0; animation: fadeUp 0.9s 1s forwards;
+  }
+  .flag-pill {
+    display: flex; align-items: center; gap: 0.5rem;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(201,168,76,0.2);
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: var(--silver);
+    letter-spacing: 0.05em;
+  }
+  .flag-pill .fi { font-size: 1rem; }
+  .hero-scroll {
+    position: absolute; bottom: 2.5rem; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+    color: var(--silver); font-size: 0.68rem;
+    letter-spacing: 0.18em; text-transform: uppercase;
+    opacity: 0; animation: fadeUp 1s 1.2s forwards;
+  }
+  .scroll-line {
+    width: 1px; height: 40px;
+    background: linear-gradient(to bottom, var(--gold), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* ── STATS BAR ─────────────────────────────────────────── */
+  #stats {
+    border-top: 1px solid rgba(201,168,76,0.12);
+    border-bottom: 1px solid rgba(201,168,76,0.12);
+    background: rgba(255,255,255,0.015);
+    padding: 2.5rem 0;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stat-item {
+    padding: 0 2rem;
+    border-right: 1px solid rgba(201,168,76,0.1);
+    text-align: center;
+  }
+  .stat-item:first-child { border-left: 1px solid rgba(201,168,76,0.1); }
+  .stat-number {
+    font-family: var(--font-display);
+    font-size: 2.8rem;
+    font-weight: 600;
+    color: var(--gold);
+    line-height: 1;
+    display: block;
+  }
+  .stat-label {
+    font-size: 0.72rem;
+    color: var(--silver);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-top: 0.3rem;
+    display: block;
+  }
+
+  /* ── SECTION STYLES ────────────────────────────────────── */
+  section { padding: 7rem 0; }
+  .section-header { margin-bottom: 4rem; }
+  .section-title {
+    font-family: var(--font-display);
+    font-size: clamp(2.2rem, 4vw, 3.2rem);
+    font-weight: 300;
+    color: var(--white);
+    line-height: 1.15;
+    letter-spacing: -0.01em;
+  }
+  .section-title em { font-style: italic; color: var(--gold); }
+  .section-body {
+    color: var(--silver);
+    max-width: 600px;
+    margin-top: 1rem;
+    line-height: 1.8;
+  }
+
+  /* ── ABOUT ─────────────────────────────────────────────── */
+  #about { background: var(--navy2); }
+  .about-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5rem; align-items: center;
+  }
+  .about-visual {
+    position: relative;
+  }
+  .about-card {
+    background: var(--navy3);
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 4px;
+    padding: 2.5rem;
+    position: relative;
+    overflow: hidden;
+  }
+  .about-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .about-card-label {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 1rem;
+  }
+  .about-card-title {
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--white);
+    margin-bottom: 0.75rem;
+    font-weight: 400;
+  }
+  .about-card-body {
+    color: var(--silver);
+    font-size: 0.88rem;
+    line-height: 1.75;
+  }
+  .about-card-accent {
+    position: absolute; bottom: -20px; right: -20px;
+    width: 80px; height: 80px;
+    border: 1px solid rgba(201,168,76,0.1);
+    border-radius: 50%;
+  }
+  .about-card-accent::after {
+    content: '';
+    position: absolute; inset: 12px;
+    border: 1px solid rgba(201,168,76,0.15);
+    border-radius: 50%;
+  }
+  .about-floating {
+    position: absolute; top: -20px; right: -20px;
+    background: var(--gold);
+    color: var(--navy);
+    padding: 1rem 1.2rem;
+    font-family: var(--font-display);
+    font-size: 2rem; font-weight: 600;
+    border-radius: 4px;
+    line-height: 1;
+    text-align: center;
+  }
+  .about-floating small {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-weight: 400;
+    margin-top: 0.2rem;
+  }
+  .about-text p { color: var(--silver); line-height: 1.85; margin-bottom: 1.2rem; }
+  .about-text p:last-child { margin-bottom: 0; }
+  .about-text strong { color: var(--light); font-weight: 500; }
+  .fortune-badge {
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    border: 1px solid rgba(201,168,76,0.25);
+    padding: 0.6rem 1rem;
+    border-radius: 2px;
+    margin-top: 1.5rem;
+    font-size: 0.78rem;
+    color: var(--silver);
+  }
+  .fortune-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--gold); border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ── SERVICES ──────────────────────────────────────────── */
+  #services { background: var(--navy); }
+  .services-intro {
+    display: grid; grid-template-columns: 1fr 1.5fr;
+    gap: 4rem; margin-bottom: 5rem; align-items: end;
+  }
+  .service-pillar {
+    margin-bottom: 3.5rem;
+  }
+  .pillar-header {
+    display: flex; align-items: flex-start; gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .pillar-number {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    font-weight: 300;
+    color: rgba(201,168,76,0.2);
+    line-height: 1; flex-shrink: 0;
+    letter-spacing: -0.05em;
+  }
+  .pillar-title-block {}
+  .pillar-title {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 400;
+    color: var(--white);
+    line-height: 1.2;
+    margin-bottom: 0.4rem;
+  }
+  .pillar-subtitle {
+    font-size: 0.78rem;
+    color: var(--gold);
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .services-line {
+    width: 100%; height: 1px;
+    background: linear-gradient(90deg, rgba(201,168,76,0.3), transparent);
+    margin: 2rem 0;
+  }
+
+  .service-cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .service-card {
+    background: var(--navy2);
+    border: 1px solid rgba(143,160,188,0.1);
+    border-radius: 3px;
+    padding: 1.8rem 1.5rem;
+    position: relative;
+    transition: all var(--transition);
+    cursor: default;
+    overflow: hidden;
+  }
+  .service-card::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 100%;
+    height: 2px; background: var(--gold);
+    transition: right 0.5s ease;
+  }
+  .service-card:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-4px); }
+  .service-card:hover::before { right: 0; }
+  .service-card-icon {
+    width: 36px; height: 36px;
+    margin-bottom: 1.2rem;
+    opacity: 0.7;
+  }
+  .service-card-name {
+    font-size: 0.92rem;
+    font-weight: 500;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+    letter-spacing: 0.01em;
+  }
+  .service-card-desc {
+    font-size: 0.8rem;
+    color: var(--silver);
+    line-height: 1.7;
+  }
+
+  /* Engineering service cards - 2 per row */
+  .service-cards-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+  .service-card-wide {
+    background: var(--navy2);
+    border: 1px solid rgba(143,160,188,0.1);
+    border-radius: 3px;
+    padding: 1.8rem 1.8rem;
+    position: relative;
+    transition: all var(--transition);
+    overflow: hidden;
+  }
+  .service-card-wide::before {
+    content: ''; position: absolute;
+    top: 0; left: 0; right: 100%;
+    height: 2px; background: var(--gold);
+    transition: right 0.5s ease;
+  }
+  .service-card-wide:hover { border-color: rgba(201,168,76,0.25); transform: translateY(-4px); }
+  .service-card-wide:hover::before { right: 0; }
+  .service-card-wide .service-card-name { font-size: 1rem; margin-bottom: 0.6rem; }
+  .service-card-wide .service-card-desc { font-size: 0.82rem; }
+
+  /* Offshore strip */
+  .offshore-strip {
+    margin-top: 2rem;
+    background: linear-gradient(135deg, rgba(201,168,76,0.06) 0%, rgba(201,168,76,0.02) 100%);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 3px;
+    padding: 1.8rem 2rem;
+    display: flex; align-items: center; gap: 2rem;
+  }
+  .offshore-icon { font-size: 2rem; flex-shrink: 0; }
+  .offshore-body {}
+  .offshore-body strong {
+    display: block;
+    color: var(--gold);
+    font-size: 0.82rem;
+    font-family: var(--font-mono);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.3rem;
+  }
+  .offshore-body p { font-size: 0.85rem; color: var(--silver); }
+
+  /* Software logos */
+  .software-row {
+    display: flex; flex-wrap: wrap; gap: 0.75rem;
+    margin-top: 1.2rem;
+  }
+  .sw-pill {
+    font-family: var(--font-mono);
+    font-size: 0.68rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--gold);
+    border: 1px solid rgba(201,168,76,0.25);
+    padding: 0.3rem 0.7rem;
+    border-radius: 2px;
+  }
+
+  /* ── INDUSTRIES ────────────────────────────────────────── */
+  #industries { background: var(--navy3); }
+  .industry-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2px;
+    margin-top: 3rem;
+  }
+  .industry-item {
+    background: var(--navy2);
+    padding: 3rem 2.5rem;
+    position: relative; overflow: hidden;
+    transition: all var(--transition);
+    border: 1px solid transparent;
+  }
+  .industry-item:hover {
+    background: var(--navy3);
+    border-color: rgba(201,168,76,0.15);
+    z-index: 1;
+  }
+  .industry-item:hover .ind-number { opacity: 0.08; }
+  .ind-number {
+    font-family: var(--font-display);
+    font-size: 5rem;
+    font-weight: 300;
+    color: var(--gold);
+    opacity: 0.04;
+    position: absolute; top: 1rem; right: 1.5rem;
+    line-height: 1;
+    letter-spacing: -0.05em;
+    transition: opacity var(--transition);
+  }
+  .ind-icon { font-size: 2rem; margin-bottom: 1rem; display: block; }
+  .ind-title {
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+    font-weight: 400;
+    color: var(--white);
+    margin-bottom: 0.5rem;
+  }
+  .ind-body { font-size: 0.82rem; color: var(--silver); line-height: 1.7; }
+
+  /* ── PRESENCE ──────────────────────────────────────────── */
+  #presence { background: var(--navy2); }
+  .presence-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 3rem; margin-top: 3rem;
+  }
+  .presence-card {
+    background: var(--navy3);
+    border: 1px solid rgba(201,168,76,0.12);
+    border-radius: 4px;
+    overflow: hidden;
+    position: relative;
+    transition: all var(--transition);
+  }
+  .presence-card:hover { border-color: rgba(201,168,76,0.3); }
+  .presence-card-top {
+    background: linear-gradient(135deg, var(--steel), var(--navy3));
+    padding: 2.5rem;
+    position: relative; overflow: hidden;
+  }
+  .presence-card-top::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--gold), transparent);
+  }
+  .presence-flag {
+    font-size: 3rem; display: block; margin-bottom: 0.5rem;
+  }
+  .presence-country {
+    font-family: var(--font-display);
+    font-size: 1.8rem;
+    font-weight: 300;
+    color: var(--white);
+  }
+  .presence-city {
+    font-family: var(--font-mono);
+    font-size: 0.65rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 0.2rem;
+  }
+  .presence-card-body { padding: 2rem 2.5rem; }
+  .presence-list { list-style: none; }
+  .presence-list li {
+    display: flex; align-items: flex-start; gap: 0.8rem;
+    font-size: 0.85rem; color: var(--silver);
+    padding: 0.5rem 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    line-height: 1.5;
+  }
+  .presence-list li:last-child { border-bottom: none; }
+  .presence-list li::before {
+    content: '—'; color: var(--gold); flex-shrink: 0; margin-top: 0.05rem;
+  }
+
+  /* ── WHY ───────────────────────────────────────────────── */
+  #why { background: var(--navy); }
+  .why-grid {
+    display: grid; grid-template-columns: repeat(2, 1fr);
+    gap: 2rem; margin-top: 3rem;
+  }
+  .why-item {
+    display: flex; gap: 1.5rem;
+    padding: 1.5rem;
+    border: 1px solid rgba(143,160,188,0.08);
+    border-radius: 3px;
+    transition: all var(--transition);
+    background: rgba(255,255,255,0.015);
+  }
+  .why-item:hover { border-color: rgba(201,168,76,0.2); background: rgba(201,168,76,0.03); }
+  .why-icon {
+    width: 44px; height: 44px; flex-shrink: 0;
+    background: rgba(201,168,76,0.08);
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+  }
+  .why-content {}
+  .why-title {
+    font-size: 0.92rem; font-weight: 500;
+    color: var(--white); margin-bottom: 0.4rem;
+  }
+  .why-body { font-size: 0.82rem; color: var(--silver); line-height: 1.7; }
+
+  /* ── CONTACT ───────────────────────────────────────────── */
+  #contact {
+    background: var(--navy3);
+    position: relative; overflow: hidden;
+  }
+  #contact::before {
+    content: '';
+    position: absolute; bottom: 0; right: 0;
+    width: 500px; height: 500px;
+    background: radial-gradient(ellipse, rgba(201,168,76,0.04) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .contact-grid {
+    display: grid; grid-template-columns: 1fr 1.2fr;
+    gap: 5rem; align-items: start;
+  }
+  .contact-info {}
+  .contact-detail {
+    display: flex; align-items: flex-start; gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+  .contact-detail-icon {
+    width: 36px; height: 36px; flex-shrink: 0;
+    border: 1px solid rgba(201,168,76,0.2);
+    border-radius: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.9rem;
+  }
+  .contact-detail-body {}
+  .contact-detail-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--gold);
+    display: block; margin-bottom: 0.2rem;
+  }
+  .contact-detail-value {
+    font-size: 0.88rem; color: var(--light);
+  }
+  .contact-form {}
+  .form-group { margin-bottom: 1.2rem; }
+  .form-label {
+    font-family: var(--font-mono);
+    font-size: 0.62rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--silver);
+    display: block; margin-bottom: 0.5rem;
+  }
+  .form-input, .form-select, .form-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(143,160,188,0.15);
+    border-radius: 2px;
+    padding: 0.8rem 1rem;
+    color: var(--light);
+    font-family: var(--font-body);
+    font-size: 0.88rem;
+    transition: border-color var(--transition);
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .form-input:focus, .form-select:focus, .form-textarea:focus {
+    border-color: var(--gold);
+    background: rgba(201,168,76,0.04);
+  }
+  .form-input::placeholder, .form-textarea::placeholder { color: rgba(143,160,188,0.4); }
+  .form-select { cursor: pointer; }
+  .form-select option { background: var(--navy2); }
+  .form-textarea { min-height: 120px; resize: vertical; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+
+  /* ── FOOTER ────────────────────────────────────────────── */
+  footer {
+    background: var(--navy);
+    border-top: 1px solid rgba(201,168,76,0.1);
+    padding: 3rem 0 2rem;
+  }
+  .footer-inner {
+    display: flex; justify-content: space-between;
+    align-items: flex-start; gap: 2rem; flex-wrap: wrap;
+  }
+  .footer-brand {}
+  .footer-logo {
+    font-family: var(--font-display);
+    font-size: 1.4rem; font-weight: 600;
+    color: var(--white); margin-bottom: 0.5rem;
+  }
+  .footer-logo span { color: var(--gold); }
+  .footer-tagline {
+    font-size: 0.75rem; color: var(--silver);
+    letter-spacing: 0.05em;
+    max-width: 220px; line-height: 1.6;
+  }
+  .footer-links {
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .footer-links a {
+    text-decoration: none;
+    font-size: 0.8rem; color: var(--silver);
+    transition: color var(--transition);
+    letter-spacing: 0.03em;
+  }
+  .footer-links a:hover { color: var(--gold); }
+  .footer-bottom {
+    border-top: 1px solid rgba(255,255,255,0.05);
+    margin-top: 2rem; padding-top: 1.5rem;
+    display: flex; justify-content: space-between;
+    align-items: center; flex-wrap: wrap; gap: 1rem;
+  }
+  .footer-copy { font-size: 0.72rem; color: rgba(143,160,188,0.5); }
+  .footer-reg {
+    font-family: var(--font-mono);
+    font-size: 0.62rem; color: rgba(143,160,188,0.35);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── ANIMATIONS ────────────────────────────────────────── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.4; }
+    50%       { opacity: 1; }
+  }
+  .reveal {
+    opacity: 0; transform: translateY(24px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+  .reveal-delay-4 { transition-delay: 0.4s; }
+
+  /* ── MOBILE NAV ────────────────────────────────────────── */
+  @media (max-width: 900px) {
+    .nav-links { display: none; flex-direction: column; }
+    .nav-links.open {
+      display: flex;
+      position: fixed; inset: 0; top: 60px;
+      background: rgba(10,15,30,0.98);
+      backdrop-filter: blur(20px);
+      padding: 3rem 2rem;
+      z-index: 99;
+      align-items: center;
+      gap: 2.5rem;
+    }
+    .nav-links.open a { font-size: 1rem; }
+    .nav-hamburger { display: flex; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 1.5rem; }
+    .stat-item { border: none !important; }
+    .about-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .about-floating { position: relative; top: auto; right: auto; display: inline-block; margin-bottom: 1.5rem; }
+    .services-intro { grid-template-columns: 1fr; gap: 2rem; }
+    .service-cards { grid-template-columns: 1fr 1fr; }
+    .service-cards-2 { grid-template-columns: 1fr; }
+    .industry-grid { grid-template-columns: 1fr; }
+    .presence-grid { grid-template-columns: 1fr; }
+    .why-grid { grid-template-columns: 1fr; }
+    .contact-grid { grid-template-columns: 1fr; gap: 3rem; }
+    .form-row { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 600px) {
+    .service-cards { grid-template-columns: 1fr; }
+    .hero-flags { position: static; margin-top: 2rem; opacity: 1; animation: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ── NAV ──────────────────────────────────────────────── -->
+<nav id="navbar">
+  <div class="container inner">
+    <a href="#hero" class="nav-logo">
+      <span class="nav-logo-mark">Vali<span>dex</span></span>
+      <span class="nav-logo-sub">Engineering</span>
+    </a>
+    <ul class="nav-links" id="navLinks">
+      <li><a href="#about">About</a></li>
+      <li><a href="#services">Services</a></li>
+      <li><a href="#industries">Industries</a></li>
+      <li><a href="#presence">Presence</a></li>
+      <li><a href="#contact" class="nav-cta">Contact Us</a></li>
+    </ul>
+    <div class="nav-hamburger" id="hamburger" onclick="toggleNav()">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- ── HERO ─────────────────────────────────────────────── -->
+<section id="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-circuit"></div>
+  <div class="container">
+    <div class="hero-content">
+      <div class="hero-tag">
+        <span class="tag">Validation · Quality · Engineering Design</span>
+      </div>
+      <h1 class="hero-headline">
+        Precision.<br>
+        <em>Engineered</em><br>
+        to Compliance.
+      </h1>
+      <p class="hero-sub">
+        Validex Engineering delivers expert validation & quality consultancy and precision mechanical design services — serving medical device, pharmaceutical, and FMCG manufacturers across Ireland.
+      </p>
+      <div class="hero-actions">
+        <a href="#services" class="btn-primary">Explore Services</a>
+        <a href="#contact" class="btn-outline">Get in Touch</a>
+      </div>
+    </div>
+  </div>
+  <div class="hero-flags">
+    <div class="flag-pill">🇮🇪 Dublin, Ireland</div>
+  </div>
+  <div class="hero-scroll">
+    Scroll
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ── STATS ─────────────────────────────────────────────── -->
+<div id="stats">
+  <div class="container">
+    <div class="stats-grid">
+      <div class="stat-item reveal">
+        <span class="stat-number">8+</span>
+        <span class="stat-label">Years Industry Experience</span>
+      </div>
+      <div class="stat-item reveal reveal-delay-1">
+        <span class="stat-number">3</span>
+        <span class="stat-label">Regulated Industries Served</span>
+      </div>
+      <div class="stat-item reveal reveal-delay-2">
+        <span class="stat-number">IE</span>
+        <span class="stat-label">Based in Ireland</span>
+      </div>
+      <div class="stat-item reveal reveal-delay-3">
+        <span class="stat-number">F500</span>
+        <span class="stat-label">Fortune 500 Background</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── ABOUT ─────────────────────────────────────────────── */
+<section id="about">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-visual reveal">
+        <div class="about-floating">
+          8+<small>Years</small>
+        </div>
+        <div class="about-card">
+          <div class="about-card-label">Founded on Expertise</div>
+          <div class="about-card-title">Engineering Consultancy Born from the Plant Floor</div>
+          <div class="about-card-body">
+            Validex Engineering was built by a practitioner — not a theorist. Our founder has led large-scale engineering functions, validation programmes, and CAPEX-driven projects at Fortune 500 manufacturing organisations across Ireland and globally.
+          </div>
+          <div class="about-card-accent"></div>
+        </div>
+      </div>
+      <div class="about-text reveal reveal-delay-2">
+        <span class="tag">Who We Are</span>
+        <div class="divider"></div>
+        <h2 class="section-title" style="margin-bottom:1.5rem;">
+          Bridging <em>Compliance</em><br>and Engineering Excellence
+        </h2>
+        <p>
+          Validex Engineering is a specialist consultancy operating at the intersection of <strong>regulatory compliance</strong> and <strong>precision engineering design</strong>. We serve manufacturers in medical devices, pharmaceuticals, and FMCG who demand rigorous quality systems alongside first-class mechanical engineering capability.
+        </p>
+        <p>
+          Based in <strong>Ireland</strong>, we deliver senior on-site consultancy directly to client facilities — bringing structured, accountable engineering expertise to every engagement.
+        </p>
+        <p>
+          Our founder brings over 8 years of hands-on experience in regulated manufacturing environments, having delivered complex validation programmes, led engineering transformations, and managed multi-million euro CAPEX portfolios for globally recognised organisations.
+        </p>
+        <div class="fortune-badge">
+          <div class="dot"></div>
+          Founder previously held senior engineering roles at Fortune 500 manufacturing companies
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── SERVICES ──────────────────────────────────────────── -->
+<section id="services">
+  <div class="container">
+    <div class="services-intro">
+      <div class="reveal">
+        <span class="tag">What We Do</span>
+        <div class="divider"></div>
+        <h2 class="section-title">
+          Two Core<br><em>Service Pillars</em>
+        </h2>
+      </div>
+      <div class="reveal reveal-delay-1">
+        <p class="section-body">
+          Validex Engineering operates across two interconnected specialisms — regulatory-grade Validation & Quality consultancy, and precision Mechanical & Design Engineering. Together they serve the full lifecycle of regulated manufacturing.
+        </p>
+      </div>
+    </div>
+
+    <!-- PILLAR 1 -->
+    <div class="service-pillar reveal">
+      <div class="pillar-header">
+        <div class="pillar-number">01</div>
+        <div class="pillar-title-block">
+          <div class="pillar-subtitle">Validation & Quality Consultancy</div>
+          <div class="pillar-title">Compliance. Documented.<br>Defensible.</div>
+        </div>
+      </div>
+      <p style="color:var(--silver); font-size:0.9rem; max-width:700px; margin-bottom:2rem; line-height:1.8;">
+        We provide end-to-end validation and quality management services aligned to ISO 13485, EU MDR, FDA 21 CFR Part 820, and GMP regulations. From process qualification through to full QMS implementation, our documentation is audit-ready from day one.
+      </p>
+      <div class="service-cards">
+        <div class="service-card reveal reveal-delay-1">
+          <svg class="service-card-icon" viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect x="6" y="4" width="24" height="28" rx="2" stroke="#c9a84c" stroke-width="1.2"/>
+            <path d="M11 12h14M11 17h14M11 22h8" stroke="#c9a84c" stroke-width="1.2" stroke-linecap="round"/>
+            <circle cx="27" cy="27" r="5" fill="var(--navy2)" stroke="#c9a84c" stroke-width="1.2"/>
+            <path d="M25 27l1.5 1.5L29 25" stroke="#c9a84c" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="service-card-name">Process Validation (IQ / OQ / PQ)</div>
+          <div class="service-card-desc">Full Installation, Operational, and Performance Qualification protocols and reports. End-to-end authoring, execution, and sign-off support.</div>
+        </div>
+        <div class="service-card reveal reveal-delay-2">
+          <svg class="service-card-icon" viewBox="0 0 36 36" fill="none">
+            <path d="M18 4L32 12V24L18 32L4 24V12L18 4Z" stroke="#c9a84c" stroke-width="1.2"/>
+            <path d="M18 4V32M4 12L32 12M4 24L32 24" stroke="#c9a84c" stroke-width="0.7" stroke-dasharray="2 2"/>
+            <circle cx="18" cy="18" r="4" stroke="#c9a84c" stroke-width="1.2"/>
+          </svg>
+          <div class="service-card-name">Quality Management Systems (QMS)</div>
+          <div class="service-card-desc">Design, implementation, and gap assessment of ISO 13485-compliant QMS. SOPs, work instructions, and document control frameworks.</div>
+        </div>
+        <div class="service-card reveal reveal-delay-3">
+          <svg class="service-card-icon" viewBox="0 0 36 36" fill="none">
+            <circle cx="18" cy="18" r="12" stroke="#c9a84c" stroke-width="1.2"/>
+            <path d="M12 18l4 4 8-8" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div class="service-card-name">Regulatory Compliance & Audits</div>
+          <div class="service-card-desc">Internal audit programmes, CAPA management, regulatory submission support. Ready-state assessment for FDA, EU MDR, and HPRA inspections.</div>
+        </div>
+        <div class="service-card reveal reveal-delay-1">
+          <svg class="service-card-icon" viewBox="0 0 36 36" fill="none">
+            <path d="M8 28V16M14 28V10M20 28V20M26 28V6" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="service-card-name">Risk Management (ISO 14971)</div>
+          <div class="service-card-desc">Risk analysis, FMEA, hazard identification, and risk-benefit documentation aligned to ISO 14971 for medical device product lifecycle.</div>
+        </div>
+        <div class="service-card reveal reveal-delay-2">
+          <svg class="service-card-icon" viewBox="0 0 36 36" fill="none">
+            <path d="M6 30L18 6L30 30H6Z" stroke="#c9a84c" stroke-width="1.2"/>
+            <path d="M18 14v8M18 25v1" stroke="#c9a84c" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+          <div class="service-card-name">Deviation & CAPA Management</div>
+          <div class="service-card-desc">Root cause analysis, corrective and preventive action planning, effectiveness checks, and non-conformance resolution.</div>
+        </div>
+        <div class="service-card reveal reveal-delay-3">
+          <svg class="service-card-icon" viewBox="0 0 36 36" fill="none">
+            <rect x="4" y="8" width="28" height="20" rx="2" stroke="#c9a84c" stroke-width="1.2"/>
+            <path d="M4 14h28" stroke="#c9a84c" stroke-width="0.8"/>
+            <circle cx="10" cy="11" r="1.5" fill="#c9a84c" opacity="0.5"/>
+            <circle cx="15" cy="11" r="1.5" fill="#c9a84c" opacity="0.5"/>
+            <path d="M10 21h8M10 25h5" stroke="#c9a84c" stroke-width="1" stroke-linecap="round"/>
+          </svg>
+          <div class="service-card-name">Validation Master Planning</div>
+          <div class="service-card-desc">Site-level Validation Master Plans (VMPs), equipment and process change control, and revalidation strategy for ongoing compliance.</div>
+        </div>
+      </div>
+      <div class="services-line"></div>
+    </div>
+
+    <!-- PILLAR 2 -->
+    <div class="service-pillar reveal">
+      <div class="pillar-header">
+        <div class="pillar-number">02</div>
+        <div class="pillar-title-block">
+          <div class="pillar-subtitle">Mechanical & Design Engineering</div>
+          <div class="pillar-title">Designed With Precision.<br>Delivered On Spec.</div>
+        </div>
+      </div>
+      <p style="color:var(--silver); font-size:0.9rem; max-width:700px; margin-bottom:2rem; line-height:1.8;">
+        Our engineering design capability spans full product and tooling development — from concept through to manufacturing-ready outputs. We operate with industry-standard software and deliver through on-site and remote engagement across Ireland.
+      </p>
+
+      <div class="service-cards-2">
+        <div class="service-card-wide reveal reveal-delay-1">
+          <div class="service-card-name">CAD Design & 3D Modelling</div>
+          <div class="service-card-desc">Full parametric 3D modelling and detailed engineering drawings for components, assemblies, jigs, fixtures, and tooling. Designed to DFM and GD&T standards.</div>
+          <div class="software-row">
+            <span class="sw-pill">SolidWorks</span>
+            <span class="sw-pill">PTC Creo</span>
+          </div>
+        </div>
+        <div class="service-card-wide reveal reveal-delay-2">
+          <div class="service-card-name">Finite Element Analysis (FEA)</div>
+          <div class="service-card-desc">Structural, thermal, and fatigue simulation to validate design integrity prior to prototyping. Reducing physical iteration cycles and accelerating time-to-market.</div>
+          <div class="software-row">
+            <span class="sw-pill">ANSYS</span>
+            <span class="sw-pill">SolidWorks Simulation</span>
+          </div>
+        </div>
+        <div class="service-card-wide reveal reveal-delay-1">
+          <div class="service-card-name">CAM Programming & Toolpath Design</div>
+          <div class="service-card-desc">CNC machining toolpath generation, tooling selection, and machining strategy development for complex geometries and precision medical-grade components.</div>
+          <div class="software-row">
+            <span class="sw-pill">SolidWorks CAM</span>
+            <span class="sw-pill">Creo Manufacturing</span>
+          </div>
+        </div>
+        <div class="service-card-wide reveal reveal-delay-2">
+          <div class="service-card-name">Equipment & Fixture Engineering</div>
+          <div class="service-card-desc">Custom jig and fixture design for manufacturing and inspection. Production line tooling, assembly aids, and ergonomic workstation engineering solutions.</div>
+          <div class="software-row">
+            <span class="sw-pill">SolidWorks</span>
+            <span class="sw-pill">Creo</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!-- ── INDUSTRIES ─────────────────────────────────────────── -->
+<section id="industries">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="tag">Who We Serve</span>
+      <div class="divider"></div>
+      <h2 class="section-title">
+        Regulated Industries<br>We <em>Specialise</em> In
+      </h2>
+      <p class="section-body">
+        Our expertise is concentrated where compliance, precision, and quality are non-negotiable. We understand the regulatory language, the production pressures, and the documentation expectations of each sector.
+      </p>
+    </div>
+    <div class="industry-grid">
+      <div class="industry-item reveal">
+        <span class="ind-number">01</span>
+        <span class="ind-icon">🩺</span>
+        <div class="ind-title">Medical Device Manufacturing</div>
+        <div class="ind-body">Sterile and non-sterile device manufacturing, packaging systems, implants, single-use devices. Full lifecycle validation aligned to ISO 13485, EU MDR 2017/745, ISO 11135, and ISO 7886.</div>
+      </div>
+      <div class="industry-item reveal reveal-delay-1">
+        <span class="ind-number">02</span>
+        <span class="ind-icon">⚗️</span>
+        <div class="ind-title">Pharmaceutical Manufacturing</div>
+        <div class="ind-body">GMP-compliant process validation, cleaning validation, equipment qualification, and QMS implementation for solid dose, liquid, and sterile pharmaceutical production.</div>
+      </div>
+      <div class="industry-item reveal reveal-delay-2">
+        <span class="ind-number">03</span>
+        <span class="ind-icon">🏭</span>
+        <div class="ind-title">FMCG Manufacturing</div>
+        <div class="ind-body">Engineering design, process improvement, and quality system support for fast-moving consumer goods manufacturers seeking to modernise operations and elevate compliance maturity.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── PRESENCE ───────────────────────────────────────────── -->
+<section id="presence">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="tag">Where We Operate</span>
+      <div class="divider"></div>
+      <h2 class="section-title">
+        Ireland-Based.<br><em>Nationally</em> Available.
+      </h2>
+      <p class="section-body">
+        Validex Engineering is headquartered in Ireland, delivering on-site consultancy and engineering services to clients across the island — from Dublin to Galway, Cork to Limerick and beyond.
+      </p>
+    </div>
+    <div class="presence-grid" style="grid-template-columns: 1fr;">
+      <div class="presence-card reveal" style="max-width:600px;">
+        <div class="presence-card-top">
+          <span class="presence-flag">🇮🇪</span>
+          <div class="presence-country">Ireland</div>
+          <div class="presence-city">Primary Operations Hub</div>
+        </div>
+        <div class="presence-card-body">
+          <ul class="presence-list">
+            <li>Senior validation and quality consultancy — on-site client engagement nationwide</li>
+            <li>Medical device and pharmaceutical sector focus across the island of Ireland</li>
+            <li>Direct access to HPRA and EU MDR regulatory landscape expertise</li>
+            <li>Mechanical and design engineering services delivered on-site and remotely</li>
+            <li>Qualified engineering leadership with Fortune 500 operational experience</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── WHY ────────────────────────────────────────────────── -->
+<section id="why">
+  <div class="container">
+    <div class="section-header reveal">
+      <span class="tag">Why Validex</span>
+      <div class="divider"></div>
+      <h2 class="section-title">
+        What Sets Us <em>Apart</em>
+      </h2>
+    </div>
+    <div class="why-grid">
+      <div class="why-item reveal">
+        <div class="why-icon">🏆</div>
+        <div class="why-content">
+          <div class="why-title">Fortune 500 Pedigree</div>
+          <div class="why-body">Our founder has delivered engineering and validation programmes for globally recognised multinational manufacturers. The rigour and standards of those environments underpin every Validex engagement.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-1">
+        <div class="why-icon">📋</div>
+        <div class="why-content">
+          <div class="why-title">Audit-Ready Documentation</div>
+          <div class="why-body">Every validation protocol, report, and SOP we author is written to withstand regulatory scrutiny — from FDA inspections to HPRA audits and EU MDR Technical Files.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-2">
+        <div class="why-icon">⚙️</div>
+        <div class="why-content">
+          <div class="why-title">Engineering + Compliance Under One Roof</div>
+          <div class="why-body">Rare in the market — we provide both mechanical design engineering and validation consultancy. This integrated capability reduces the coordination burden for clients running complex projects.</div>
+        </div>
+      </div>
+      <div class="why-item reveal">
+        <div class="why-icon">🔬</div>
+        <div class="why-content">
+          <div class="why-title">Deep Sector Specialisation</div>
+          <div class="why-body">Not a generalist consultancy. We focus specifically on medical device, pharma, and FMCG — sectors where the cost of non-compliance is existential and precision is expected.</div>
+        </div>
+      </div>
+      <div class="why-item reveal reveal-delay-1">
+        <div class="why-icon">🤝</div>
+        <div class="why-content">
+          <div class="why-title">Practitioner-Led, Not Theory-Driven</div>
+          <div class="why-body">Our consultants have worked on the plant floor, managed engineering teams, and delivered under real regulatory pressure. We bring applied experience, not textbook frameworks.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT ────────────────────────────────────────────── -->
+<section id="contact">
+  <div class="container">
+    <div class="contact-grid">
+      <div class="reveal">
+        <span class="tag">Get in Touch</span>
+        <div class="divider"></div>
+        <h2 class="section-title" style="margin-bottom:2rem;">
+          Let's Discuss<br>Your <em>Project</em>
+        </h2>
+        <p style="color:var(--silver); font-size:0.88rem; line-height:1.8; margin-bottom:2.5rem;">
+          Whether you need a validation programme delivered on time, a QMS built from scratch, or precision CAD engineering for a new product — we would welcome the conversation.
+        </p>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">🇮🇪</div>
+          <div class="contact-detail-body">
+            <span class="contact-detail-label">Office</span>
+            <span class="contact-detail-value">Dublin, Republic of Ireland</span>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">✉️</div>
+          <div class="contact-detail-body">
+            <span class="contact-detail-label">Email</span>
+            <span class="contact-detail-value">aiman@validexengg.com</span>
+          </div>
+        </div>
+        <div class="contact-detail">
+          <div class="contact-detail-icon">🌐</div>
+          <div class="contact-detail-body">
+            <span class="contact-detail-label">Website</span>
+            <span class="contact-detail-value">www.validexengg.com</span>
+          </div>
+        </div>
+      </div>
+      <div class="contact-form reveal reveal-delay-2">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">First Name</label>
+            <input type="text" class="form-input" placeholder="John" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Last Name</label>
+            <input type="text" class="form-input" placeholder="Murphy" />
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Company / Organisation</label>
+          <input type="text" class="form-input" placeholder="Your company name" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email Address</label>
+          <input type="email" class="form-input" placeholder="john@yourcompany.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Service of Interest</label>
+          <select class="form-select">
+            <option value="">Select a service area</option>
+            <option>Validation Consultancy (IQ/OQ/PQ)</option>
+            <option>Quality Management System (QMS)</option>
+            <option>Regulatory Compliance & Audits</option>
+            <option>Risk Management (ISO 14971)</option>
+            <option>CAD / 3D Design Engineering</option>
+            <option>FEA Simulation & Analysis</option>
+            <option>CAM Programming</option>
+            <option>Multiple Services</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Location</label>
+          <select class="form-select">
+            <option value="">Select your location</option>
+            <option>Ireland</option>
+            <option>Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Project Brief</label>
+          <textarea class="form-textarea" placeholder="Tell us about your project, timelines, and any specific requirements..."></textarea>
+        </div>
+        <button class="btn-primary" style="width:100%; text-align:center;" onclick="handleSubmit(this)">
+          Send Enquiry
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ── FOOTER ─────────────────────────────────────────────── -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">Vali<span>dex</span> Engineering</div>
+        <div class="footer-tagline">Validation, Quality & Engineering Design Services — Ireland</div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem;">Services</div>
+        <div class="footer-links">
+          <a href="#services">Process Validation</a>
+          <a href="#services">Quality Management</a>
+          <a href="#services">Regulatory Compliance</a>
+          <a href="#services">CAD / CAM Design</a>
+          <a href="#services">FEA Analysis</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem;">Industries</div>
+        <div class="footer-links">
+          <a href="#industries">Medical Device</a>
+          <a href="#industries">Pharmaceutical</a>
+          <a href="#industries">FMCG Manufacturing</a>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:var(--font-mono); font-size:0.62rem; letter-spacing:0.15em; text-transform:uppercase; color:var(--gold); margin-bottom:0.75rem;">Presence</div>
+        <div class="footer-links">
+          <a href="#presence">🇮🇪 Ireland</a>
+          <a href="#contact">Contact Us</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Validex Engineering. All rights reserved.</div>
+      <div class="footer-reg">ISO 13485 · EU MDR · FDA 21 CFR · GMP · HPRA</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Nav scroll
+  window.addEventListener('scroll', () => {
+    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 60);
+  });
+
+  // Mobile nav
+  function toggleNav() {
+    document.getElementById('navLinks').classList.toggle('open');
+  }
+  document.querySelectorAll('#navLinks a').forEach(a => {
+    a.addEventListener('click', () => document.getElementById('navLinks').classList.remove('open'));
+  });
+
+  // Scroll reveal
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); } });
+  }, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
+
+  // ── CONTACT FORM — Google Apps Script backend ──────────────
+  // IMPORTANT: Replace the URL below with YOUR deployed Apps Script URL
+  // after following the setup guide in SETUP_GUIDE.md
+  var APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyc8Ds0_zBfGaUaUtrFODKQedCFYJKT3NSRzSeFo_q9f8PR3U0Y7wxzqjCJ3GhC49Ql/exec";
+
+  function handleSubmit(btn) {
+    // Collect form values
+    var form = btn.closest('section').querySelector('.contact-form');
+    var inputs = form.querySelectorAll('.form-input, .form-select, .form-textarea');
+
+    var data = {
+      firstName: inputs[0].value.trim(),
+      lastName:  inputs[1].value.trim(),
+      company:   inputs[2].value.trim(),
+      email:     inputs[3].value.trim(),
+      service:   inputs[4].value,
+      location:  inputs[5].value,
+      message:   inputs[6].value.trim()
+    };
+
+    // Client-side validation
+    if (!data.firstName || !data.lastName) {
+      showFormError(btn, 'Please enter your first and last name.'); return;
+    }
+    if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+      showFormError(btn, 'Please enter a valid email address.'); return;
+    }
+    if (!data.service) {
+      showFormError(btn, 'Please select a service of interest.'); return;
+    }
+
+    // Loading state
+    btn.textContent = 'Sending…';
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    clearFormError(btn);
+
+    // POST to Google Apps Script
+    fetch(APPS_SCRIPT_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain' }, // Apps Script requires text/plain for no-cors
+      body: JSON.stringify(data),
+      mode: 'no-cors' // Google Apps Script doesn't support CORS preflight without workaround
+    })
+    .then(function() {
+      // no-cors means we can't read the response body — but if fetch didn't throw, it went through
+      btn.textContent = '✓ Enquiry Sent — We\'ll be in touch within 1–2 business days';
+      btn.style.background = '#2d7a4f';
+      btn.style.opacity = '1';
+      // Clear form
+      inputs.forEach(function(el) { el.value = ''; });
+    })
+    .catch(function(err) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.textContent = 'Send Enquiry';
+      showFormError(btn, 'Something went wrong. Please email us directly at aiman@validexengg.com');
+      console.error('Form error:', err);
+    });
+  }
+
+  function showFormError(btn, msg) {
+    clearFormError(btn);
+    var err = document.createElement('p');
+    err.className = 'form-error-msg';
+    err.style.cssText = 'color:#e8704a;font-size:0.78rem;margin-top:0.6rem;text-align:center;';
+    err.textContent = msg;
+    btn.parentNode.insertBefore(err, btn.nextSibling);
+  }
+
+  function clearFormError(btn) {
+    var existing = btn.parentNode.querySelector('.form-error-msg');
+    if (existing) existing.remove();
+  }
+</script>
+</body>
+</html>
